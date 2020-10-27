@@ -20,19 +20,33 @@ exports.registration = async (req, res) => {
 
         await newUser.save();
 
+        const user = await User.findOne({ email });
+
+        const payload = {
+            user: {
+                id: user.id
+            }
+        };
+
+        jwt.sign(payload, process.env.SECRET, {
+            expiresIn: 60 * 60 * 24 * 31       // in seconds
+        }, (error, token) => {
+            if (error) throw error;
+
+            res.json({ token, user });
+        });
+
     } catch (error) {
         console.log(error);
         res.status(400).send('Registration failed! Something went wrong...');
     }
-
-    res.json("Desde registración");
 };
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        let user = await User.findOne({ email });
+        const user = await User.findOne({ email });
 
         if (!user) {
             return res.status(400).json({ msg: 'No user with that email found!' });
@@ -51,11 +65,11 @@ exports.login = async (req, res) => {
         };
 
         jwt.sign(payload, process.env.SECRET, {
-            expiresIn: 600       // in seconds
+            expiresIn: 60 * 60 * 24 * 31     // in seconds
         }, (error, token) => {
             if (error) throw error;
 
-            res.json({ token });
+            res.json({ token, user });
         });
 
     } catch (error) {
@@ -66,9 +80,9 @@ exports.login = async (req, res) => {
 exports.userInfo = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
-        res.json({user});
+        res.json({ user });
     } catch (error) {
         console.log(error);
-        res.status(500).json({msg: 'Error caught'});
+        res.status(500).json({ msg: 'Error caught' });
     }
-}
+};
