@@ -10,4 +10,14 @@ router.post('/',
     projectController.addProject
 );
 
+router.get('/', 
+    tokenValid,
+    projectController.synchronizeProjects
+);
+
+router.delete('/:id',
+    tokenValid,
+    projectController.deleteProject
+)
+
 module.exports = router;

@@ -17,7 +17,7 @@ const UsuariosSchema = mongoose.Schema({
         required: true,
         trim: true
     },
-    registro: {
+    registered: {
         type: Date,
         default: Date.now
     }

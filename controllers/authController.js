@@ -1,8 +1,13 @@
 const User = require('../models/User');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
 
 exports.registration = async (req, res) => {
+    const response = validationResult(req);
+    if( !response.isEmpty() ) {
+        return res.status(400).json({msg: response.errors[0].msg })
+    }
 
     const { email, password } = req.body;
 
@@ -20,12 +25,8 @@ exports.registration = async (req, res) => {
 
         await newUser.save();
 
-        const user = await User.findOne({ email });
-
         const payload = {
-            user: {
-                id: user.id
-            }
+            userId: newUser._id
         };
 
         jwt.sign(payload, process.env.SECRET, {
@@ -33,9 +34,9 @@ exports.registration = async (req, res) => {
         }, (error, token) => {
             if (error) throw error;
 
-            res.json({ token, user });
+            res.json({ token, newUser });
         });
-
+    
     } catch (error) {
         console.log(error);
         res.status(400).send('Registration failed! Something went wrong...');
@@ -59,9 +60,7 @@ exports.login = async (req, res) => {
         }
 
         const payload = {
-            user: {
-                id: user.id
-            }
+            userId: user._id
         };
 
         jwt.sign(payload, process.env.SECRET, {
@@ -79,7 +78,7 @@ exports.login = async (req, res) => {
 
 exports.userInfo = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-password');
+        const user = await User.findById(req.userId).select('-password');
         res.json({ user });
     } catch (error) {
         console.log(error);
